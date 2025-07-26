@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Login - My Flask App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body
+    class="font-apple min-h-screen m-0 p-0 flex items-center justify-center"
+    style="background: rgb(var(--bg-primary)); color: rgb(var(--text-primary))"
+  >
+    <div class="w-full max-w-md p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold" style="color: rgb(var(--text-primary))">
+          Welcome Back
+        </h1>
+        <p class="text-sm mt-2" style="color: rgb(var(--text-secondary))">
+          Sign in to your account
+        </p>
+      </div>
+
+      <!-- Login Form -->
+      <div
+        class="p-6 rounded-lg border"
+        style="
+          background: rgb(var(--bg-secondary));
+          border-color: rgb(var(--border-color));
+        "
+      >
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--text-primary))"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              required
+              class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+              style="
+                background: rgb(var(--bg-primary));
+                border-color: rgb(var(--border-color));
+                color: rgb(var(--text-primary));
+              "
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--text-primary))"
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              required
+              class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+              style="
+                background: rgb(var(--bg-primary));
+                border-color: rgb(var(--border-color));
+                color: rgb(var(--text-primary));
+              "
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-white"
+            style="background: rgb(var(--accent-blue))"
+            onmouseover="this.style.background='rgb(var(--accent-blue-hover))'"
+            onmouseout="this.style.background='rgb(var(--accent-blue))'"
+          >
+            Sign In
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <div class="text-sm mb-4" style="color: rgb(var(--text-secondary))">
+            Or continue with
+          </div>
+
+          <a
+            href="/signin/github"
+            class="w-full inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 border"
+            style="
+              background: rgb(var(--bg-primary));
+              border-color: rgb(var(--border-color));
+              color: rgb(var(--text-primary));
+            "
+            onmouseover="this.style.background='rgb(var(--bg-tertiary))'"
+            onmouseout="this.style.background='rgb(var(--bg-primary))'"
+          >
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            Continue with GitHub
+          </a>
+        </div>
+      </div>
+
+      <div
+        id="message"
+        class="mt-4 text-center text-sm"
+        style="display: none"
+      ></div>
+    </div>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+          const email = formData.get("email");
+          const password = formData.get("password");
+
+          try {
+            const response = await fetch("/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, password }),
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+              window.location.href = "/";
+            } else {
+              showMessage(result.message, "error");
+            }
+          } catch (error) {
+            showMessage("Login failed: " + error.message, "error");
+          }
+        });
+
+      function showMessage(message, type = "success") {
+        const messageDiv = document.getElementById("message");
+        messageDiv.textContent = message;
+        messageDiv.style.color =
+          type === "error" ? "#ff3b30" : "rgb(var(--accent-blue))";
+        messageDiv.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

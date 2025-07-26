@@ -1,0 +1,5 @@
+{
+  "python.analysis.autoImportCompletions": true,
+  "css.customData": [".vscode/tailwind.json"],
+  "css.lint.unknownAtRules": "ignore"
+}

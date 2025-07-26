@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block title %}My Flask App{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              apple: [
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "SF Pro Display",
+                "Helvetica Neue",
+                "Arial",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body
+    class="font-apple min-h-screen m-0 p-0 overflow-hidden flex"
+    style="background: rgb(var(--bg-primary)); color: rgb(var(--text-primary))"
+  >
+
+    <!-- Main Content Wrapper -->
+    <div id="content" class="flex w-full">
+      <!-- Sidebar -->
+      <div
+        class="w-64 h-screen flex flex-col border-r"
+        style="
+          background: rgb(var(--sidebar-bg));
+          border-color: rgb(var(--border-color));
+        "
+      >
+      <!-- Sidebar Header -->
+      <div class="p-4 border-b" style="border-color: rgb(var(--border-color))">
+        <h2
+          class="text-lg font-semibold"
+          style="color: rgb(var(--text-primary))"
+        >
+          My Flask App
+        </h2>
+      </div>
+
+      <!-- Sidebar Content -->
+      <div class="flex-1 overflow-y-auto p-3">
+        <div class="mb-6">
+          <div
+            class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
+            style="color: rgb(var(--text-tertiary))"
+          >
+            Navigation
+          </div>
+          <a
+            href="/"
+            class="nav-link {% if request.endpoint == 'index' %}nav-active{% endif %}"
+          >
+            <div class="w-5 h-5 mr-3 opacity-90">🏠</div>
+            Home
+          </a>
+          <a
+            href="/courses"
+            class="nav-link {% if request.endpoint == 'courses' %}nav-active{% endif %}"
+          >
+            <div class="w-5 h-5 mr-3 opacity-70">📚</div>
+            Courses
+          </a>
+          <a
+            href="/tasks"
+            class="nav-link {% if request.endpoint == 'tasks' %}nav-active{% endif %}"
+          >
+            <div class="w-5 h-5 mr-3 opacity-70">✅</div>
+            Tasks
+          </a>
+        </div>
+
+        <div class="mb-6">
+          <div
+            class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
+            style="color: rgb(var(--text-tertiary))"
+          >
+            Tools
+          </div>
+          <div
+            class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
+            style="color: rgb(var(--text-secondary))"
+            onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
+            onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
+          >
+            <div class="w-5 h-5 mr-3 opacity-70">📊</div>
+            Analytics
+          </div>
+          <div
+            class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
+            style="color: rgb(var(--text-secondary))"
+            onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
+            onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
+          >
+            <div class="w-5 h-5 mr-3 opacity-70">💾</div>
+            Database
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-screen">
+      <!-- Top Toolbar -->
+      <div
+        class="h-14 flex items-center justify-between px-6 border-b"
+        style="
+          background: rgb(var(--bg-secondary));
+          border-color: rgb(var(--border-color));
+        "
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="flex items-center px-4 py-2 rounded-lg text-sm cursor-pointer transition-all duration-200 border text-white"
+            style="
+              background: rgb(var(--accent-blue));
+              border-color: rgb(var(--accent-blue));
+            "
+          >
+            {% block toolbar_title %}View{% endblock %}
+          </div>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="flex items-center gap-4">
+          <span id="userDisplay" class="text-sm" style="color: rgb(var(--text-secondary))">
+            Loading...
+          </span>
+          <button onclick="logout()"
+                  class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+                  style="background: #ff3b30; color: white">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="flex-1 p-8 overflow-y-auto">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+            </div>
+      </div>
+    </div>
+
+
+
+    <!-- Common JavaScript -->
+    <script>
+      // Global authentication state
+      let currentUser = null;
+      let isAuthenticated = false;
+
+      // Check authentication status on page load
+      async function checkAuthStatus() {
+        try {
+          const response = await fetch('/api/auth/status');
+          const result = await response.json();
+          
+          if (result.authenticated) {
+            currentUser = result.user;
+            isAuthenticated = true;
+            updateUIForAuthenticatedUser();
+          } else {
+            isAuthenticated = false;
+            updateUIForUnauthenticatedUser();
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          isAuthenticated = false;
+          updateUIForUnauthenticatedUser();
+        }
+      }
+
+      function updateUIForAuthenticatedUser() {
+        // Show authenticated content
+        console.log('User authenticated:', currentUser);
+        
+        // Update user display
+        const userDisplay = document.getElementById('userDisplay');
+        if (userDisplay && currentUser) {
+          userDisplay.textContent = `Hello, ${currentUser.username || currentUser.email}`;
+        }
+      }
+
+      function updateUIForUnauthenticatedUser() {
+        // Redirect to login if not on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+
+      // Enhanced API Helper Functions with auth
+      async function apiCall(url, method = "GET", data = null) {
+        try {
+          const options = {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: 'include' // Important for session cookies
+          };
+
+          if (data) {
+            options.body = JSON.stringify(data);
+          }
+
+          const response = await fetch(url, options);
+          const result = await response.json();
+
+          if (!response.ok) {
+            // Handle authentication errors
+            if (response.status === 401) {
+              isAuthenticated = false;
+              window.location.href = '/login';
+              return;
+            }
+            throw new Error(result.message || "API request failed");
+          }
+
+          return result;
+        } catch (error) {
+          console.error("API Error:", error);
+          throw error;
+        }
+      }
+
+      // Show success/error messages
+      function showMessage(message, type = "success") {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = message;
+
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+          messageDiv.style.opacity = "0";
+          setTimeout(() => {
+            if (document.body.contains(messageDiv)) {
+              document.body.removeChild(messageDiv);
+            }
+          }, 300);
+        }, 3000);
+      }
+
+      // Logout function
+      async function logout() {
+        try {
+          await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+          window.location.href = '/login';
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+      }
+
+      // Initialize auth check when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        checkAuthStatus();
+      });
+    </script>
+
+    <!-- Course Dialog -->
+    <div id="courseDialog" class="dialog" style="display: none;">
+      <div class="dialog-backdrop" onclick="closeCourseDialog()"></div>
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h2 class="dialog-title">Add New Course</h2>
+          <button class="dialog-close" onclick="closeCourseDialog()">×</button>
+        </div>
+        
+        <div class="dialog-body">
+          <form id="addCourseForm" class="space-y-4">
+            <div>
+              <label
+                class="block text-sm font-medium mb-2"
+                style="color: rgb(var(--text-primary))"
+              >
+                Course Name
+              </label>
+              <input
+                type="text"
+                name="courseName"
+                required
+                class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                style="
+                  background: rgb(var(--bg-primary));
+                  border-color: rgb(var(--border-color));
+                  color: rgb(var(--text-primary));
+                "
+                placeholder="Enter course name"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium mb-2"
+                style="color: rgb(var(--text-primary))"
+              >
+                Description
+              </label>
+              <textarea
+                name="description"
+                rows="3"
+                class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200 resize-none"
+                style="
+                  background: rgb(var(--bg-primary));
+                  border-color: rgb(var(--border-color));
+                  color: rgb(var(--text-primary));
+                "
+                placeholder="Enter course description"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        
+        <div class="dialog-footer">
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            style="
+              background: rgb(var(--bg-tertiary));
+              color: rgb(var(--text-secondary));
+              border: 1px solid rgb(var(--border-color));
+            "
+            onclick="closeCourseDialog()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="addCourseForm"
+            class="px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-white"
+            style="background: rgb(var(--accent-blue))"
+            onmouseover="this.style.background='rgb(var(--accent-blue-hover))'"
+            onmouseout="this.style.background='rgb(var(--accent-blue))'"
+          >
+            Add Course
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Dialog -->
+    <div id="taskDialog" class="dialog" style="display: none;">
+      <div class="dialog-backdrop" onclick="closeTaskDialog()"></div>
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h2 class="dialog-title">Add New Task</h2>
+          <button class="dialog-close" onclick="closeTaskDialog()">×</button>
+        </div>
+        
+        <div class="dialog-body">
+          <form id="addTaskForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--text-primary))"
+                >
+                  Task Title
+                </label>
+                <input
+                  type="text"
+                  name="taskTitle"
+                  required
+                  class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                  style="
+                    background: rgb(var(--bg-primary));
+                    border-color: rgb(var(--border-color));
+                    color: rgb(var(--text-primary));
+                  "
+                  placeholder="Enter task title"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--text-primary))"
+                >
+                  Assign to Course
+                </label>
+                <select
+                  name="courseId"
+                  required
+                  id="courseSelect"
+                  class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                  style="
+                    background: rgb(var(--bg-primary));
+                    border-color: rgb(var(--border-color));
+                    color: rgb(var(--text-primary));
+                  "
+                >
+                  <option value="">Select a course</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--text-primary))"
+                >
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                  style="
+                    background: rgb(var(--bg-primary));
+                    border-color: rgb(var(--border-color));
+                    color: rgb(var(--text-primary));
+                  "
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--text-primary))"
+                >
+                  Priority
+                </label>
+                <select
+                  name="priority"
+                  class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                  style="
+                    background: rgb(var(--bg-primary));
+                    border-color: rgb(var(--border-color));
+                    color: rgb(var(--text-primary));
+                  "
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--text-primary))"
+                >
+                  Status
+                </label>
+                <select
+                  name="completed"
+                  class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200"
+                  style="
+                    background: rgb(var(--bg-primary));
+                    border-color: rgb(var(--border-color));
+                    color: rgb(var(--text-primary));
+                  "
+                >
+                  <option value="Not Started" selected>Not Started</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Submitted">Submitted</option>
+                  <option value="Mark Received">Mark received</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium mb-2"
+                style="color: rgb(var(--text-primary))"
+              >
+                Notes
+              </label>
+              <textarea
+                name="notes"
+                rows="3"
+                class="w-full px-4 py-3 rounded-lg border outline-none transition-all duration-200 resize-none"
+                style="
+                  background: rgb(var(--bg-primary));
+                  border-color: rgb(var(--border-color));
+                  color: rgb(var(--text-primary));
+                "
+                placeholder="Enter task notes (optional)"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        
+        <div class="dialog-footer">
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            style="
+              background: rgb(var(--bg-tertiary));
+              color: rgb(var(--text-secondary));
+              border: 1px solid rgb(var(--border-color));
+            "
+            onclick="closeTaskDialog()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="addTaskForm"
+            class="px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-white"
+            style="background: rgb(var(--accent-blue))"
+            onmouseover="this.style.background='rgb(var(--accent-blue-hover))'"
+            onmouseout="this.style.background='rgb(var(--accent-blue))'"
+          >
+            Add Task
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Include external JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

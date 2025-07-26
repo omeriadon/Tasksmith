@@ -1,0 +1,178 @@
+{% extends "base.html" %} {% block title %}Courses - My Flask App{% endblock %}
+{% block toolbar_title %}Course Management{% endblock %} {% block content %}
+<div class="max-w-4xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold" style="color: rgb(var(--text-primary))">
+      Course Management
+    </h1>
+    <button
+      onclick="showCourseDialog()"
+      class="px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-white flex items-center gap-2"
+      style="background: rgb(var(--accent-blue))"
+      onmouseover="this.style.background='rgb(var(--accent-blue-hover))'"
+      onmouseout="this.style.background='rgb(var(--accent-blue))'"
+    >
+      <span>+</span>
+      Add Course
+    </button>
+  </div>
+
+  <!-- Course List -->
+  <div>
+    <h2
+      class="text-xl font-semibold mb-4"
+      style="color: rgb(var(--text-primary))"
+    >
+      Existing Courses
+    </h2>
+    <div id="courseList" class="space-y-3">
+      <div class="text-center py-8" style="color: rgb(var(--text-secondary))">
+        <div class="flex flex-col items-center justify-center">
+          <img
+            src="/static/icons/progress.indicator.svg"
+            alt="Loading"
+            class="w-10 h-10 mb-2 animate-spin spinner"
+          />
+          <span>Loading courses...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  // COURSE MANAGEMENT
+  async function loadCourses() {
+    try {
+      const result = await apiCall("/api/courses");
+      const courseList = document.getElementById("courseList");
+
+      if (result.courses && result.courses.length > 0) {
+        courseList.innerHTML = result.courses
+          .map(
+            (course) => `
+          <div class="flex items-center justify-between p-4 rounded-lg border" 
+               style="background: rgb(var(--bg-secondary)); border-color: rgb(var(--border-color))">
+            <div>
+              <div class="font-medium" style="color: rgb(var(--text-primary))">${
+                course.name
+              }</div>
+              <div class="text-sm" style="color: rgb(var(--text-secondary))">${
+                course.description || "No description"
+              }</div>
+              <div class="text-xs mt-1" style="color: rgb(var(--text-tertiary))">User ID: ${
+                course.user_id
+              } | Course ID: ${course.id}</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editCourse('${course.id}')" 
+                      class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+                      style="background: rgb(var(--accent-blue)); color: white">
+                Edit
+              </button>
+              <button onclick="deleteCourse('${course.id}')" 
+                      class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+                      style="background: #ff3b30; color: white">
+                Delete
+              </button>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      } else {
+        courseList.innerHTML =
+          '<div class="text-center py-8" style="color: rgb(var(--text-secondary))">No courses found</div>';
+      }
+    } catch (error) {
+      const courseList = document.getElementById("courseList");
+      courseList.innerHTML =
+        '<div class="text-center py-8" style="color: #ff3b30">Failed to load courses. Check console for details.</div>';
+      showMessage("Failed to load courses: " + error.message, "error");
+    }
+  }
+
+  async function loadUsers() {
+    try {
+      const result = await apiCall("/api/users");
+      const userSelect = document.getElementById("userSelect");
+
+      if (result.users && result.users.length > 0) {
+        userSelect.innerHTML =
+          '<option value="">Select a user</option>' +
+          result.users
+            .map(
+              (user) =>
+                `<option value="${user.id}">${
+                  user.username || user.email
+                }</option>`
+            )
+            .join("");
+      }
+    } catch (error) {
+      console.error("Failed to load users for dropdown:", error);
+    }
+  }
+
+  async function addCourse(formData) {
+    try {
+      const courseData = {
+        courseName: formData.get("courseName"),
+        description: formData.get("description"),
+        userId: formData.get("userId"),
+      };
+
+      const result = await apiCall("/api/courses", "POST", courseData);
+      showMessage("Course created successfully!");
+      loadCourses();
+      document.getElementById("addCourseForm").reset();
+    } catch (error) {
+      showMessage("Failed to create course: " + error.message, "error");
+    }
+  }
+
+  function editCourse(courseId) {
+    const newName = prompt("Enter new course name:");
+    if (newName) {
+      updateCourse(courseId, { name: newName });
+    }
+  }
+
+  async function updateCourse(courseId, data) {
+    try {
+      await apiCall(`/api/courses/${courseId}`, "PUT", data);
+      showMessage("Course updated successfully!");
+      loadCourses();
+    } catch (error) {
+      showMessage("Failed to update course: " + error.message, "error");
+    }
+  }
+
+  async function deleteCourse(courseId) {
+    if (confirm("Are you sure you want to delete this course?")) {
+      try {
+        await apiCall(`/api/courses/${courseId}`, "DELETE");
+        showMessage("Course deleted successfully!");
+        loadCourses();
+      } catch (error) {
+        showMessage("Failed to delete course: " + error.message, "error");
+      }
+    }
+  }
+
+  // Form submission handler
+  document
+    .getElementById("addCourseForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      addCourse(formData);
+    });
+
+  // Load data on page load
+  window.addEventListener("load", function () {
+    loadCourses();
+    loadUsers();
+  });
+</script>
+{% endblock %}

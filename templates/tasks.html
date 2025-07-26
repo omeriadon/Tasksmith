@@ -1,0 +1,345 @@
+{% extends "base.html" %} {% block title %}Tasks - My Flask App{% endblock %} {%
+block toolbar_title %}Task Management{% endblock %} {% block content %}
+<div class="max-w-4xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold" style="color: rgb(var(--text-primary))">
+      Task Management
+    </h1>
+    <button
+      onclick="showTaskDialog()"
+      class="px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-white flex items-center gap-2"
+      style="background: rgb(var(--accent-blue))"
+      onmouseover="this.style.background='rgb(var(--accent-blue-hover))'"
+      onmouseout="this.style.background='rgb(var(--accent-blue))'"
+    >
+      <span>+</span>
+      Add Task
+    </button>
+  </div>
+
+  <!-- Task List -->
+  <div>
+    <h2
+      class="text-xl font-semibold mb-4"
+      style="color: rgb(var(--text-primary))"
+    >
+      Existing Tasks
+    </h2>
+
+    <!-- Filter Controls -->
+    <div class="mb-4 flex flex-wrap gap-2">
+      <button
+        onclick="filterTasks('all')"
+        id="filter-all"
+        class="px-4 py-2 text-sm rounded-lg transition-all duration-200 filter-btn filter-active"
+      >
+        All Tasks
+      </button>
+      <button
+        onclick="filterTasks('pending')"
+        id="filter-pending"
+        class="px-4 py-2 text-sm rounded-lg transition-all duration-200 filter-btn"
+      >
+        Pending
+      </button>
+      <button
+        onclick="filterTasks('completed')"
+        id="filter-completed"
+        class="px-4 py-2 text-sm rounded-lg transition-all duration-200 filter-btn"
+      >
+        Completed
+      </button>
+      <button
+        onclick="filterTasks('high')"
+        id="filter-high"
+        class="px-4 py-2 text-sm rounded-lg transition-all duration-200 filter-btn"
+      >
+        High Priority
+      </button>
+    </div>
+
+    <div id="taskList" class="space-y-3">
+      <div class="text-center py-8" style="color: rgb(var(--text-secondary))">
+        <div class="flex flex-col items-center justify-center">
+          <img
+            src="/static/icons/progress.indicator.svg"
+            alt="Loading"
+            class="w-10 h-10 mb-2 animate-spin spinner"
+          />
+          <span>Loading users...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<style>
+  .filter-btn {
+    background: rgb(var(--bg-secondary));
+    border: 1px solid rgb(var(--border-color));
+    color: rgb(var(--text-secondary));
+  }
+
+  .filter-active {
+    background: rgb(var(--accent-blue)) !important;
+    color: white !important;
+    border-color: rgb(var(--accent-blue)) !important;
+  }
+
+  .priority-high {
+    border-left: 4px solid #ff3b30;
+  }
+
+  .priority-medium {
+    border-left: 4px solid #ff9500;
+  }
+
+  .priority-low {
+    border-left: 4px solid #34c759;
+  }
+
+  .task-completed {
+    opacity: 0.7;
+  }
+
+  .task-completed .task-title {
+    text-decoration: line-through;
+  }
+</style>
+
+<script>
+  let allTasks = [];
+  let currentFilter = "all";
+
+  // TASK MANAGEMENT
+  async function loadTasks() {
+    try {
+      const result = await apiCall("/api/tasks");
+      allTasks = result.tasks || [];
+      displayTasks(allTasks);
+    } catch (error) {
+      const taskList = document.getElementById("taskList");
+      taskList.innerHTML =
+        '<div class="text-center py-8" style="color: #ff3b30">Failed to load tasks. Check console for details.</div>';
+      showMessage("Failed to load tasks: " + error.message, "error");
+    }
+  }
+
+  function displayTasks(tasks) {
+    const taskList = document.getElementById("taskList");
+
+    if (tasks && tasks.length > 0) {
+      taskList.innerHTML = tasks
+        .map((task) => {
+          const priorityClass = `priority-${task.priority || "medium"}`;
+          const completedClass = task.completed ? "task-completed" : "";
+          const statusText = task.completed ? "Completed" : "Pending";
+          const statusColor = task.completed ? "#34c759" : "#ff9500";
+
+          return `
+            <div class="flex items-center justify-between p-4 rounded-lg border ${priorityClass} ${completedClass}" 
+                 style="background: rgb(var(--bg-secondary)); border-color: rgb(var(--border-color))">
+              <div class="flex-1">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" ${task.completed ? "checked" : ""} 
+                         onchange="toggleTaskStatus('${task.id}', this.checked)"
+                         class="w-4 h-4 rounded">
+                  <div class="task-title font-medium" style="color: rgb(var(--text-primary))">${
+                    task.title
+                  }</div>
+                  <span class="px-2 py-1 text-xs rounded-full" 
+                        style="background: ${statusColor}20; color: ${statusColor}">
+                    ${statusText}
+                  </span>
+                  <span class="px-2 py-1 text-xs rounded-full capitalize" 
+                        style="background: rgb(var(--bg-primary)); color: rgb(var(--text-secondary))">
+                    ${task.priority || "medium"}
+                  </span>
+                </div>
+                <div class="text-sm mt-1" style="color: rgb(var(--text-secondary))">${
+                  task.notes || "No notes"
+                }</div>
+                <div class="text-xs mt-1 flex gap-4" style="color: rgb(var(--text-tertiary))">
+                  <span>Course ID: ${task.course_id}</span>
+                  <span>Task ID: ${task.id}</span>
+                  ${
+                    task.due_date
+                      ? `<span>Due: ${new Date(
+                          task.due_date
+                        ).toLocaleDateString()}</span>`
+                      : ""
+                  }
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="editTask('${task.id}')" 
+                        class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+                        style="background: rgb(var(--accent-blue)); color: white">
+                  Edit
+                </button>
+                <button onclick="deleteTask('${task.id}')" 
+                        class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+                        style="background: #ff3b30; color: white">
+                  Delete
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    } else {
+      taskList.innerHTML =
+        '<div class="text-center py-8" style="color: rgb(var(--text-secondary))">No tasks found</div>';
+    }
+  }
+
+  function filterTasks(filter) {
+    currentFilter = filter;
+
+    // Update active filter button
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.classList.remove("filter-active");
+    });
+    document.getElementById(`filter-${filter}`).classList.add("filter-active");
+
+    // Filter tasks
+    let filteredTasks = allTasks;
+
+    switch (filter) {
+      case "pending":
+        filteredTasks = allTasks.filter((task) => !task.completed);
+        break;
+      case "completed":
+        filteredTasks = allTasks.filter((task) => task.completed);
+        break;
+      case "high":
+        filteredTasks = allTasks.filter((task) => task.priority === "high");
+        break;
+      case "all":
+      default:
+        filteredTasks = allTasks;
+        break;
+    }
+
+    displayTasks(filteredTasks);
+  }
+
+  async function loadCourses() {
+    try {
+      const result = await apiCall("/api/courses");
+      const courseSelect = document.getElementById("courseSelect");
+
+      if (result.courses && result.courses.length > 0) {
+        courseSelect.innerHTML =
+          '<option value="">Select a course</option>' +
+          result.courses
+            .map(
+              (course) => `<option value="${course.id}">${course.name}</option>`
+            )
+            .join("");
+      }
+    } catch (error) {
+      console.error("Failed to load courses for dropdown:", error);
+    }
+  }
+
+  // Function specifically for loading courses into the task dialog
+  async function loadCoursesForTasks() {
+    try {
+      const result = await apiCall("/api/courses");
+      const courseSelect = document.getElementById("courseSelect");
+
+      if (result.courses && result.courses.length > 0) {
+        courseSelect.innerHTML =
+          '<option value="">Select a course</option>' +
+          result.courses
+            .map(
+              (course) => `<option value="${course.id}">${course.name}</option>`
+            )
+            .join("");
+      }
+    } catch (error) {
+      console.error("Failed to load courses for dropdown:", error);
+    }
+  }
+
+  async function addTask(formData) {
+    try {
+      const taskData = {
+        taskTitle: formData.get("taskTitle"),
+        notes: formData.get("notes"),
+        courseId: formData.get("courseId"),
+        dueDate: formData.get("dueDate"),
+        priority: formData.get("priority"),
+        completed: formData.get("completed"),
+      };
+
+      const result = await apiCall("/api/tasks", "POST", taskData);
+      showMessage("Task created successfully!");
+      loadTasks();
+      document.getElementById("addTaskForm").reset();
+      closeTaskDialog(); // Close the dialog after successful submission
+    } catch (error) {
+      showMessage("Failed to create task: " + error.message, "error");
+    }
+  }
+
+  async function toggleTaskStatus(taskId, completed) {
+    try {
+      await apiCall(`/api/tasks/${taskId}`, "PUT", { completed });
+      showMessage(`Task ${completed ? "completed" : "reopened"}!`);
+      loadTasks();
+    } catch (error) {
+      showMessage("Failed to update task status: " + error.message, "error");
+      loadTasks(); // Reload to reset checkbox state
+    }
+  }
+
+  function editTask(taskId) {
+    const task = allTasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const newTitle = prompt("Enter new task title:", task.title);
+    if (newTitle && newTitle !== task.title) {
+      updateTask(taskId, { title: newTitle });
+    }
+  }
+
+  async function updateTask(taskId, data) {
+    try {
+      await apiCall(`/api/tasks/${taskId}`, "PUT", data);
+      showMessage("Task updated successfully!");
+      loadTasks();
+    } catch (error) {
+      showMessage("Failed to update task: " + error.message, "error");
+    }
+  }
+
+  async function deleteTask(taskId) {
+    if (confirm("Are you sure you want to delete this task?")) {
+      try {
+        await apiCall(`/api/tasks/${taskId}`, "DELETE");
+        showMessage("Task deleted successfully!");
+        loadTasks();
+      } catch (error) {
+        showMessage("Failed to delete task: " + error.message, "error");
+      }
+    }
+  }
+
+  // Form submission handler
+  document
+    .getElementById("addTaskForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      addTask(formData);
+    });
+
+  // Load data on page load
+  window.addEventListener("load", function () {
+    loadTasks();
+    loadCourses();
+  });
+</script>
+{% endblock %}

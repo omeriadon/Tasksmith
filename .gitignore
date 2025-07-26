@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+env/
+venv/
+instance/
+.webassets-cache
+*.sqlite3
+*.log
+.DS_Store
+.env
+node_modules/
+dist/
+build/
+.env
+*.log
+.DS_Store
