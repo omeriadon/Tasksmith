@@ -21,14 +21,21 @@
         },
       };
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/favicon.png') }}"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
   <body
     class="font-apple min-h-screen m-0 p-0 overflow-hidden flex"
     style="background: rgb(var(--bg-primary)); color: rgb(var(--text-primary))"
   >
-
     <!-- Main Content Wrapper -->
     <div id="content" class="flex w-full">
       <!-- Sidebar -->
@@ -39,123 +46,127 @@
           border-color: rgb(var(--border-color));
         "
       >
-      <!-- Sidebar Header -->
-      <div class="p-4 border-b" style="border-color: rgb(var(--border-color))">
-        <h2
-          class="text-lg font-semibold"
-          style="color: rgb(var(--text-primary))"
+        <!-- Sidebar Header -->
+        <div
+          class="p-4 border-b"
+          style="border-color: rgb(var(--border-color))"
         >
-          My Flask App
-        </h2>
-      </div>
-
-      <!-- Sidebar Content -->
-      <div class="flex-1 overflow-y-auto p-3">
-        <div class="mb-6">
-          <div
-            class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
-            style="color: rgb(var(--text-tertiary))"
+          <h2
+            class="text-lg font-semibold"
+            style="color: rgb(var(--text-primary))"
           >
-            Navigation
-          </div>
-          <a
-            href="/"
-            class="nav-link {% if request.endpoint == 'index' %}nav-active{% endif %}"
-          >
-            <div class="w-5 h-5 mr-3 opacity-90">🏠</div>
-            Home
-          </a>
-          <a
-            href="/courses"
-            class="nav-link {% if request.endpoint == 'courses' %}nav-active{% endif %}"
-          >
-            <div class="w-5 h-5 mr-3 opacity-70">📚</div>
-            Courses
-          </a>
-          <a
-            href="/tasks"
-            class="nav-link {% if request.endpoint == 'tasks' %}nav-active{% endif %}"
-          >
-            <div class="w-5 h-5 mr-3 opacity-70">✅</div>
-            Tasks
-          </a>
+            My Flask App
+          </h2>
         </div>
 
-        <div class="mb-6">
-          <div
-            class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
-            style="color: rgb(var(--text-tertiary))"
-          >
-            Tools
-          </div>
-          <div
-            class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
-            style="color: rgb(var(--text-secondary))"
-            onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
-            onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
-          >
-            <div class="w-5 h-5 mr-3 opacity-70">📊</div>
-            Analytics
-          </div>
-          <div
-            class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
-            style="color: rgb(var(--text-secondary))"
-            onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
-            onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
-          >
-            <div class="w-5 h-5 mr-3 opacity-70">💾</div>
-            Database
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col h-screen">
-      <!-- Top Toolbar -->
-      <div
-        class="h-14 flex items-center justify-between px-6 border-b"
-        style="
-          background: rgb(var(--bg-secondary));
-          border-color: rgb(var(--border-color));
-        "
-      >
-        <div class="flex items-center gap-4">
-          <div
-            class="flex items-center px-4 py-2 rounded-lg text-sm cursor-pointer transition-all duration-200 border text-white"
-            style="
-              background: rgb(var(--accent-blue));
-              border-color: rgb(var(--accent-blue));
-            "
-          >
-            {% block toolbar_title %}View{% endblock %}
-          </div>
-        </div>
-        
-        <!-- User Menu -->
-        <div class="flex items-center gap-4">
-          <span id="userDisplay" class="text-sm" style="color: rgb(var(--text-secondary))">
-            Loading...
-          </span>
-          <button onclick="logout()"
-                  class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
-                  style="background: #ff3b30; color: white">
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <!-- Content Area -->
-      <div class="flex-1 p-8 overflow-y-auto">
-        {% block content %}{% endblock %}
-      </div>
-    </div>
-
+        <!-- Sidebar Content -->
+        <div class="flex-1 overflow-y-auto p-3">
+          <div class="mb-6">
+            <div
+              class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
+              style="color: rgb(var(--text-tertiary))"
+            >
+              Navigation
             </div>
+            <a
+              href="/"
+              class="nav-link {% if request.endpoint == 'index' %}nav-active{% endif %}"
+            >
+              <div class="w-5 h-5 mr-3 opacity-90">🏠</div>
+              Home
+            </a>
+            <a
+              href="/courses"
+              class="nav-link {% if request.endpoint == 'courses' %}nav-active{% endif %}"
+            >
+              <div class="w-5 h-5 mr-3 opacity-70">📚</div>
+              Courses
+            </a>
+            <a
+              href="/tasks"
+              class="nav-link {% if request.endpoint == 'tasks' %}nav-active{% endif %}"
+            >
+              <div class="w-5 h-5 mr-3 opacity-70">✅</div>
+              Tasks
+            </a>
+          </div>
+
+          <div class="mb-6">
+            <div
+              class="text-xs font-semibold uppercase tracking-wider px-3 py-2 mb-2"
+              style="color: rgb(var(--text-tertiary))"
+            >
+              Tools
+            </div>
+            <div
+              class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
+              style="color: rgb(var(--text-secondary))"
+              onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
+              onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
+            >
+              <div class="w-5 h-5 mr-3 opacity-70">📊</div>
+              Analytics
+            </div>
+            <div
+              class="flex items-center px-3 py-2 my-1 rounded-lg text-sm cursor-pointer transition-all duration-200"
+              style="color: rgb(var(--text-secondary))"
+              onmouseover="this.style.background='rgb(var(--bg-tertiary))'; this.style.color='rgb(var(--text-primary))'"
+              onmouseout="this.style.background=''; this.style.color='rgb(var(--text-secondary))'"
+            >
+              <div class="w-5 h-5 mr-3 opacity-70">💾</div>
+              Database
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="flex-1 flex flex-col h-screen">
+        <!-- Top Toolbar -->
+        <div
+          class="h-14 flex items-center justify-between px-6 border-b"
+          style="
+            background: rgb(var(--bg-secondary));
+            border-color: rgb(var(--border-color));
+          "
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="flex items-center px-4 py-2 rounded-lg text-sm cursor-pointer transition-all duration-200 border text-white"
+              style="
+                background: rgb(var(--accent-blue));
+                border-color: rgb(var(--accent-blue));
+              "
+            >
+              {% block toolbar_title %}View{% endblock %}
+            </div>
+          </div>
+
+          <!-- User Menu -->
+          <div class="flex items-center gap-4">
+            <span
+              id="userDisplay"
+              class="text-sm"
+              style="color: rgb(var(--text-secondary))"
+            >
+              Loading...
+            </span>
+            <button
+              onclick="logout()"
+              class="px-3 py-2 text-xs rounded-lg transition-all duration-200"
+              style="background: #ff3b30; color: white"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-8 overflow-y-auto">
+          {% block content %}{% endblock %}
+        </div>
       </div>
     </div>
-
-
 
     <!-- Common JavaScript -->
     <script>
@@ -166,9 +177,9 @@
       // Check authentication status on page load
       async function checkAuthStatus() {
         try {
-          const response = await fetch('/api/auth/status');
+          const response = await fetch("/api/auth/status");
           const result = await response.json();
-          
+
           if (result.authenticated) {
             currentUser = result.user;
             isAuthenticated = true;
@@ -178,7 +189,7 @@
             updateUIForUnauthenticatedUser();
           }
         } catch (error) {
-          console.error('Auth check failed:', error);
+          console.error("Auth check failed:", error);
           isAuthenticated = false;
           updateUIForUnauthenticatedUser();
         }
@@ -186,19 +197,21 @@
 
       function updateUIForAuthenticatedUser() {
         // Show authenticated content
-        console.log('User authenticated:', currentUser);
-        
+        console.log("User authenticated:", currentUser);
+
         // Update user display
-        const userDisplay = document.getElementById('userDisplay');
+        const userDisplay = document.getElementById("userDisplay");
         if (userDisplay && currentUser) {
-          userDisplay.textContent = `Hello, ${currentUser.username || currentUser.email}`;
+          userDisplay.textContent = `Hello, ${
+            currentUser.username || currentUser.email
+          }`;
         }
       }
 
       function updateUIForUnauthenticatedUser() {
         // Redirect to login if not on login page
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
         }
       }
 
@@ -210,7 +223,7 @@
             headers: {
               "Content-Type": "application/json",
             },
-            credentials: 'include' // Important for session cookies
+            credentials: "include", // Important for session cookies
           };
 
           if (data) {
@@ -224,7 +237,7 @@
             // Handle authentication errors
             if (response.status === 401) {
               isAuthenticated = false;
-              window.location.href = '/login';
+              window.location.href = "/login";
               return;
             }
             throw new Error(result.message || "API request failed");
@@ -258,31 +271,31 @@
       // Logout function
       async function logout() {
         try {
-          await fetch('/logout', {
-            method: 'POST',
-            credentials: 'include'
+          await fetch("/logout", {
+            method: "POST",
+            credentials: "include",
           });
-          window.location.href = '/login';
+          window.location.href = "/login";
         } catch (error) {
-          console.error('Logout failed:', error);
+          console.error("Logout failed:", error);
         }
       }
 
       // Initialize auth check when page loads
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         checkAuthStatus();
       });
     </script>
 
     <!-- Course Dialog -->
-    <div id="courseDialog" class="dialog" style="display: none;">
+    <div id="courseDialog" class="dialog" style="display: none">
       <div class="dialog-backdrop" onclick="closeCourseDialog()"></div>
       <div class="dialog-content">
         <div class="dialog-header">
           <h2 class="dialog-title">Add New Course</h2>
           <button class="dialog-close" onclick="closeCourseDialog()">×</button>
         </div>
-        
+
         <div class="dialog-body">
           <form id="addCourseForm" class="space-y-4">
             <div>
@@ -326,7 +339,7 @@
             </div>
           </form>
         </div>
-        
+
         <div class="dialog-footer">
           <button
             type="button"
@@ -355,14 +368,14 @@
     </div>
 
     <!-- Task Dialog -->
-    <div id="taskDialog" class="dialog" style="display: none;">
+    <div id="taskDialog" class="dialog" style="display: none">
       <div class="dialog-backdrop" onclick="closeTaskDialog()"></div>
       <div class="dialog-content">
         <div class="dialog-header">
           <h2 class="dialog-title">Add New Task</h2>
           <button class="dialog-close" onclick="closeTaskDialog()">×</button>
         </div>
-        
+
         <div class="dialog-body">
           <form id="addTaskForm" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -495,7 +508,7 @@
             </div>
           </form>
         </div>
-        
+
         <div class="dialog-footer">
           <button
             type="button"
