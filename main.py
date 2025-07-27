@@ -4,48 +4,40 @@ from dotenv import load_dotenv #type: ignore
 import os
 from supabase_client import supabase
 
-# Load environment variables from .env
+
 load_dotenv()
 
 app = Flask(__name__)
 
-# Flask secret key - used for:
-# - Session encryption and security
-# - CSRF protection
-# - Secure cookie signing
-# - Flash messages encryption
-# IMPORTANT: Should be a random, complex string in production!
+
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 
 def get_current_user():
     """Get current authenticated user from session"""
     try:
-        # First, try to restore session from storage if needed
-        current_session = supabase.auth.get_session()
-        if not current_session or not current_session.access_token:
-            print("No active session found, attempting to restore from storage...")
-            
-            # Try to get session from storage
-            try:
-                stored_session = supabase.auth.get_session()
-                if stored_session and stored_session.access_token:
-                    print("Session restored from storage")
-                else:
-                    print("No stored session available")
-            except Exception as e:
-                print(f"Error restoring session: {str(e)}")
+        # Check if we have the supabase auth token and restore session
+        if 'supabase.auth.token' in session:
+            token_data = session['supabase.auth.token']
+            if isinstance(token_data, dict) and 'access_token' in token_data:
+                supabase.auth.set_session(token_data['access_token'], token_data['refresh_token'])
         
-        # Get user from current auth session
         user = supabase.auth.get_user()
         if user and user.user:
-            print(f"Current user: {user.user.id}")
             return user.user
         else:
-            print("No authenticated user found")
             return None
     except Exception as e:
         print(f"Error getting current user: {str(e)}")
         return None
+
+def ensure_supabase_session():
+    """Ensure Supabase session is set before database operations"""
+    if 'supabase.auth.token' in session:
+        token_data = session['supabase.auth.token']
+        if isinstance(token_data, dict) and 'access_token' in token_data and 'refresh_token' in token_data:
+            supabase.auth.set_session(token_data['access_token'], token_data['refresh_token'])
+            return True
+    return False
 
 def require_auth(f):
     """Decorator to require authentication for API endpoints"""
@@ -117,19 +109,13 @@ def callback():
             if res.user:
                 print(f"User authenticated: {res.user.email}")
                 
-                # Store user info in session for easy access
+                # Store only basic user info in session for easy access
                 session['user_id'] = res.user.id
                 session['user_email'] = res.user.email
                 session['authenticated'] = True
                 
-                # CRITICAL: Ensure the session is properly set for RLS
-                print(f"Session after auth: {res.session}")
-                if res.session:
-                    print(f"Access token: {res.session.access_token[:50]}...")
-                    
-                    # Force set the session to ensure RLS works
-                    supabase.auth.set_session(res.session.access_token, res.session.refresh_token)
-                    print("Session explicitly set on supabase client")
+                # Let FlaskSessionStorage handle the tokens automatically
+                print("FlaskSessionStorage should handle tokens automatically")
                 
                 print("Redirecting to home page...")
                 return redirect("/")
@@ -457,43 +443,14 @@ def manage_courses():
                     'message': 'User not authenticated'
                 }), 401
             
-            print(f"Creating course for user: {current_user.id}")
-            print(f"User ID type: {type(current_user.id)}")
-            print(f"Course data: {course_name}, {description}")
-            
-            # Debug: Check if supabase client is authenticated
-            try:
-                auth_user = supabase.auth.get_user()
-                if auth_user and auth_user.user:
-                    print(f"Supabase client authenticated as: {auth_user.user.id}")
-                    print(f"Supabase user ID type: {type(auth_user.user.id)}")
-                    print(f"User IDs match: {current_user.id == auth_user.user.id}")
-                else:
-                    print("ERROR: Supabase client not authenticated!")
-                    
-                # Test the RLS policy directly
-                print("Testing RLS policy with SELECT query...")
-                test_select = supabase.table('courses').select('*').execute()
-                print(f"SELECT query result: {test_select.data}")
-                
-            except Exception as e:
-                print(f"Error checking supabase auth: {str(e)}")
-            
             course_data = {
                 'name': course_name,
                 'description': description,
-                'user_id': current_user.id  # Use string, not converting to int
+                'user_id': current_user.id
             }
-            
-            print(f"Inserting course data: {course_data}")
-            print(f"user_id in course_data type: {type(course_data['user_id'])}")
-            
-            print(f"Inserting course data: {course_data}")
             
             # RLS Policy: user_id = auth.uid() check ensures this works
             response = supabase.table('courses').insert(course_data).execute()
-            
-            print(f"Supabase response: {response}")
             
             if response.data:
                 created_course = response.data[0]
@@ -510,7 +467,6 @@ def manage_courses():
                 
         except Exception as e:
             error_msg = str(e)
-            print(f"Course creation error: {error_msg}")
             return jsonify({
                 'status': 'error',
                 'message': f'Error creating course: {error_msg}'
@@ -760,6 +716,17 @@ def login():
                 session['user_email'] = response.user.email
                 session['authenticated'] = True
                 
+                # Store tokens for session restoration
+                if response.session:
+                    session['access_token'] = response.session.access_token
+                    session['refresh_token'] = response.session.refresh_token
+                    
+                    # Set the session on Supabase client
+                    supabase.auth.set_session(
+                        response.session.access_token, 
+                        response.session.refresh_token
+                    )
+                
                 return jsonify({
                     'status': 'success',
                     'message': 'Login successful',
@@ -785,7 +752,10 @@ def login():
 def logout():
     """Logout and clear session"""
     try:
+        # Sign out from Supabase
         supabase.auth.sign_out()
+        
+        # Clear all session data including tokens
         session.clear()
         
         return jsonify({
@@ -793,6 +763,8 @@ def logout():
             'message': 'Logout successful'
         })
     except Exception as e:
+        # Even if Supabase logout fails, clear local session
+        session.clear()
         return jsonify({
             'status': 'error',
             'message': f'Logout error: {str(e)}'

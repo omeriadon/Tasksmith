@@ -16,23 +16,6 @@ block toolbar_title %}Home{% endblock %} {% block content %}
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <a
-      href="/users"
-      class="block p-6 rounded-lg border transition-all duration-200 hover:shadow-lg"
-      style="
-        background: rgb(var(--bg-secondary));
-        border-color: rgb(var(--border-color));
-      "
-    >
-      <div class="text-2xl mb-2">👤</div>
-      <h3 class="font-semibold mb-2" style="color: rgb(var(--text-primary))">
-        Users
-      </h3>
-      <p class="text-sm" style="color: rgb(var(--text-secondary))">
-        Manage user accounts
-      </p>
-    </a>
-
-    <a
       href="/courses"
       class="block p-6 rounded-lg border transition-all duration-200 hover:shadow-lg"
       style="
@@ -66,57 +49,5 @@ block toolbar_title %}Home{% endblock %} {% block content %}
       </p>
     </a>
   </div>
-
-  <form method="POST" class="max-w-lg">
-    <div class="mb-6">
-      <label
-        for="name_input"
-        class="block text-sm font-medium mb-2"
-        style="color: rgb(var(--text-primary))"
-        >Enter your name:</label
-      >
-      <input
-        type="text"
-        id="name_input"
-        name="user_name"
-        value="{{ name }}"
-        class="w-full px-4 py-3 text-base rounded-lg border outline-none transition-all duration-200"
-        style="
-          background: rgb(var(--bg-secondary));
-          border-color: rgb(var(--border-color));
-          color: rgb(var(--text-primary));
-        "
-        placeholder="Type your name here..."
-        onfocus="this.style.borderColor='rgb(var(--accent-blue))'; this.style.boxShadow='0 0 0 3px rgb(var(--accent-blue) / 0.1)'"
-        onblur="this.style.borderColor='rgb(var(--border-color))'; this.style.boxShadow=''"
-      />
-    </div>
-
-    <div class="flex gap-3">
-      <button
-        type="submit"
-        class="px-6 py-3 text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 outline-none border-none text-white"
-        style="background: rgb(var(--accent-blue))"
-        onmouseover="this.style.background='rgb(var(--accent-blue-hover))'; this.style.transform='translateY(-1px)'"
-        onmouseout="this.style.background='rgb(var(--accent-blue))'; this.style.transform='translateY(0)'"
-        onmousedown="this.style.transform='translateY(0)'"
-      >
-        Submit
-      </button>
-      <button
-        type="button"
-        class="px-6 py-3 text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 outline-none border"
-        style="
-          background: rgb(var(--bg-secondary));
-          color: rgb(var(--text-primary));
-          border-color: rgb(var(--border-color));
-        "
-        onmouseover="this.style.background='rgb(var(--bg-tertiary))'"
-        onmouseout="this.style.background='rgb(var(--bg-secondary))'"
-      >
-        Cancel
-      </button>
-    </div>
-  </form>
 </div>
 {% endblock %}
